@@ -131,7 +131,7 @@ def download_food101(data_dir):
     
     food_tgz = os.path.join(data_dir, "food-101.tar.gz")
     if not os.path.exists(os.path.join(out_dir, "images")):
-        download_file("https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/food-101.tar.gz", food_tgz)
+        download_file("http://data.vision.ee.ethz.ch/cvl/food-101.tar.gz", food_tgz)
         extract_archive(food_tgz, data_dir)
         os.remove(food_tgz)
         
