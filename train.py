@@ -94,7 +94,9 @@ def extend_cfg(cfg):
     cfg.TRAINER.MMADAPTER.ADAPTER_END = 12
     cfg.TRAINER.MMADAPTER.ADAPTER_DIM = 32
     cfg.TRAINER.MMADAPTER.ADAPTER_SCALE = 0.1
+    cfg.TRAINER.MMADAPTER.SELECTED_LAYERS = []
     cfg.DATASET.SUBSAMPLE_CLASSES = "all"  # all, base or new
+
 
 
 def setup_cfg(args):

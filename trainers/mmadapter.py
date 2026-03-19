@@ -65,7 +65,8 @@ class AdapterLearner(nn.Module):
             cfg.TRAINER.MMADAPTER.ADAPTER_START,
             cfg.TRAINER.MMADAPTER.ADAPTER_END,
             cfg.TRAINER.MMADAPTER.ADAPTER_DIM,
-            clip_model.dtype
+            clip_model.dtype,
+            cfg.TRAINER.MMADAPTER.SELECTED_LAYERS
         )
         
         self.visual_adapter_func = lambda x: self.return_visual_adapter(index=x)
@@ -75,7 +76,8 @@ class AdapterLearner(nn.Module):
             cfg.TRAINER.MMADAPTER.ADAPTER_START,
             cfg.TRAINER.MMADAPTER.ADAPTER_END,
             cfg.TRAINER.MMADAPTER.ADAPTER_DIM,
-            clip_model.dtype
+            clip_model.dtype,
+            cfg.TRAINER.MMADAPTER.SELECTED_LAYERS
         )
 
         self.shared_adapter = self._build_adapter(
@@ -84,7 +86,8 @@ class AdapterLearner(nn.Module):
             cfg.TRAINER.MMADAPTER.ADAPTER_START,
             cfg.TRAINER.MMADAPTER.ADAPTER_END,
             cfg.TRAINER.MMADAPTER.ADAPTER_DIM,
-            clip_model.dtype
+            clip_model.dtype,
+            cfg.TRAINER.MMADAPTER.SELECTED_LAYERS
         )
         self.adapter_scale = float(cfg.TRAINER.MMADAPTER.ADAPTER_SCALE)
 
@@ -110,10 +113,11 @@ class AdapterLearner(nn.Module):
         self.register_buffer("tokenized_prompts", tokenized_prompts)
 
 
-    def _build_adapter(self, d_model, n_layers, l_start, l_end, mid_dim, dtype):
+    def _build_adapter(self, d_model, n_layers, l_start, l_end, mid_dim, dtype, selected_layers=[]):
 
         adapter = [None] * (n_layers + 1)
-        for i in range(l_start, l_end+1):
+        layers_to_build = selected_layers if len(selected_layers) > 0 else list(range(l_start, l_end+1))
+        for i in layers_to_build:
             if mid_dim == d_model:
                 adapter[i] = nn.Sequential(
                     nn.Linear(d_model, mid_dim),
