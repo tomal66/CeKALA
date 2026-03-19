@@ -14,5 +14,5 @@ venv.bak/
 .idea/
 *.log
 .DS_Store
-datasets/
+# datasets/
 !datasets/.gitkeep
