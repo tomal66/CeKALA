@@ -83,14 +83,8 @@ def download_stanford_cars(data_dir):
     os.makedirs(out_dir, exist_ok=True)
     print("Pre-downloading HuggingFace tanganke/stanford_cars...")
     
-    import sys
-    if '' in sys.path: sys.path.remove('')
-    if os.getcwd() in sys.path: sys.path.remove(os.getcwd())
-    
     try:
-        import importlib
-        hf_datasets = importlib.import_module("datasets") 
-        load_dataset = hf_datasets.load_dataset
+        from datasets import load_dataset
         
         load_dataset("tanganke/stanford_cars")
         print("Stanford Cars downloaded via HuggingFace `datasets`. Further processing will occur in the dataset class.")

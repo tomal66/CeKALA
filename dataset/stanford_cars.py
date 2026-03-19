@@ -23,16 +23,8 @@ class StanfordCars(DatasetBase):
         if os.path.exists(self.split_path):
             train, val, test = OxfordPets.read_split(self.split_path, self.dataset_dir)
         else:
-            import sys
-            import importlib
+            from datasets import load_dataset
             from tqdm import tqdm
-            
-            # Temporary workaround to bypass local "datasets" folder
-            if '' in sys.path: sys.path.remove('')
-            if os.getcwd() in sys.path: sys.path.remove(os.getcwd())
-            
-            hf_datasets = importlib.import_module("datasets")
-            load_dataset = hf_datasets.load_dataset
             
             print("Loading HuggingFace tanganke/stanford_cars...")
             hf_ds = load_dataset("tanganke/stanford_cars")
