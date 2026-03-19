@@ -23,11 +23,54 @@ class StanfordCars(DatasetBase):
         if os.path.exists(self.split_path):
             train, val, test = OxfordPets.read_split(self.split_path, self.dataset_dir)
         else:
-            trainval_file = os.path.join(self.dataset_dir, "devkit", "cars_train_annos.mat")
-            test_file = os.path.join(self.dataset_dir, "cars_test_annos_withlabels.mat")
-            meta_file = os.path.join(self.dataset_dir, "devkit", "cars_meta.mat")
-            trainval = self.read_data("cars_train", trainval_file, meta_file)
-            test = self.read_data("cars_test", test_file, meta_file)
+            import sys
+            import importlib
+            from tqdm import tqdm
+            
+            # Temporary workaround to bypass local "datasets" folder
+            if '' in sys.path: sys.path.remove('')
+            if os.getcwd() in sys.path: sys.path.remove(os.getcwd())
+            
+            hf_datasets = importlib.import_module("datasets")
+            load_dataset = hf_datasets.load_dataset
+            
+            print("Loading HuggingFace tanganke/stanford_cars...")
+            hf_ds = load_dataset("tanganke/stanford_cars")
+            
+            image_dir = os.path.join(self.dataset_dir, "images")
+            mkdir_if_missing(image_dir)
+            
+            def process_split(split_name, hf_split):
+                items = []
+                features = hf_split.features
+                class_names = features['label'].names
+                
+                print(f"Processing and saving images for {split_name} split...")
+                for i, item in enumerate(tqdm(hf_split)):
+                    img = item['image']
+                    label = item['label']
+                    classname = class_names[label]
+                    
+                    names = classname.split(" ")
+                    if names[-1].isdigit() and len(names[-1]) == 4:
+                        year = names.pop(-1)
+                        names.insert(0, year)
+                        classname = " ".join(names)
+                    
+                    imname = f"{split_name}_{i:06d}.jpg"
+                    impath = os.path.join(image_dir, imname)
+                    
+                    if not os.path.exists(impath):
+                        if img.mode != 'RGB':
+                            img = img.convert('RGB')
+                        img.save(impath)
+                    
+                    items.append(Datum(impath=impath, label=label, classname=classname))
+                return items
+            
+            trainval = process_split("train", hf_ds["train"])
+            test = process_split("test", hf_ds["test"])
+            
             train, val = OxfordPets.split_trainval(trainval)
             OxfordPets.save_split(train, val, test, self.split_path, self.dataset_dir)
 
@@ -54,22 +97,3 @@ class StanfordCars(DatasetBase):
 
         super().__init__(train_x=train, val=val, test=test)
 
-    def read_data(self, image_dir, anno_file, meta_file):
-        anno_file = loadmat(anno_file)["annotations"][0]
-        meta_file = loadmat(meta_file)["class_names"][0]
-        items = []
-
-        for i in range(len(anno_file)):
-            imname = anno_file[i]["fname"][0]
-            impath = os.path.join(self.dataset_dir, image_dir, imname)
-            label = anno_file[i]["class"][0, 0]
-            label = int(label) - 1  # convert to 0-based index
-            classname = meta_file[label][0]
-            names = classname.split(" ")
-            year = names.pop(-1)
-            names.insert(0, year)
-            classname = " ".join(names)
-            item = Datum(impath=impath, label=label, classname=classname)
-            items.append(item)
-
-        return items

@@ -81,30 +81,21 @@ def download_oxford_pets(data_dir):
 def download_stanford_cars(data_dir):
     out_dir = os.path.join(data_dir, "stanford_cars")
     os.makedirs(out_dir, exist_ok=True)
+    print("Pre-downloading HuggingFace tanganke/stanford_cars...")
     
-    train_tgz = os.path.join(out_dir, "cars_train.tgz")
-    if not os.path.exists(os.path.join(out_dir, "cars_train")):
-        download_file("http://ai.stanford.edu/~jkrause/car196/cars_train.tgz", train_tgz)
-        extract_archive(train_tgz, out_dir)
-        os.remove(train_tgz)
-        
-    test_tgz = os.path.join(out_dir, "cars_test.tgz")
-    if not os.path.exists(os.path.join(out_dir, "cars_test")):
-        download_file("http://ai.stanford.edu/~jkrause/car196/cars_test.tgz", test_tgz)
-        extract_archive(test_tgz, out_dir)
-        os.remove(test_tgz)
-        
-    devkit_tgz = os.path.join(out_dir, "car_devkit.tgz")
-    if not os.path.exists(os.path.join(out_dir, "devkit")):
-        download_file("https://ai.stanford.edu/~jkrause/cars/car_devkit.tgz", devkit_tgz)
-        extract_archive(devkit_tgz, out_dir)
-        os.remove(devkit_tgz)
-        
-    labels_mat = os.path.join(out_dir, "cars_test_annos_withlabels.mat")
-    download_file("http://ai.stanford.edu/~jkrause/car196/cars_test_annos_withlabels.mat", labels_mat)
+    import sys
+    if '' in sys.path: sys.path.remove('')
+    if os.getcwd() in sys.path: sys.path.remove(os.getcwd())
     
-    split_path = os.path.join(out_dir, "split_zhou_StanfordCars.json")
-    gdown_download("1ObCFbaAgVu0I-k_Au-gIUcefirdAuizT", split_path)
+    try:
+        import importlib
+        hf_datasets = importlib.import_module("datasets") 
+        load_dataset = hf_datasets.load_dataset
+        
+        load_dataset("tanganke/stanford_cars")
+        print("Stanford Cars downloaded via HuggingFace `datasets`. Further processing will occur in the dataset class.")
+    except ImportError:
+        print("Ensure `datasets` is installed (`pip install datasets`). Dataset will be downloaded during run.")
 
 def download_oxford_flowers(data_dir):
     out_dir = os.path.join(data_dir, "oxford_flowers")
