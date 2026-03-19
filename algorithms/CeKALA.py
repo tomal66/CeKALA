@@ -80,7 +80,7 @@ def ordered_intersection(a, b):
     return [x for x in a if x in b_set]
 
 
-def get_intermediate_features(model, dataloader, cfg, device="cuda"):
+def get_intermediate_features(model, dataloader, classnames, cfg, device="cuda"):
     """
     Collect intermediate layer representations for:
       - image encoder: over the full dataset D (all batches in dataloader)
@@ -132,7 +132,6 @@ def get_intermediate_features(model, dataloader, cfg, device="cuda"):
         txt_hooks.append(resblock.register_forward_hook(get_txt_hook(i)))
 
     # Build the full class-prompt set for the text encoder
-    classnames = dataloader.dataset.classnames
     classnames = [name.replace("_", " ") for name in classnames]
     prompts = [cfg.TRAINER.MMADAPTER.TEXT_CTX_INIT + " " + name + "." for name in classnames]
     tokenized_prompts = torch.cat([clip.tokenize(p) for p in prompts]).to(device)
@@ -177,9 +176,10 @@ def select_layers(dataset, shots, cfg, k=4):
 
     dm = DataManager(cfg)
     train_loader = dm.train_loader_x
+    classnames = dm.dataset.classnames
 
     img_features, txt_features = get_intermediate_features(
-        clip_model, train_loader, cfg, device=device
+        clip_model, train_loader, classnames, cfg, device=device
     )
 
     # Step 1 and 2 in the PDF
